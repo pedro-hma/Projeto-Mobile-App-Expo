@@ -46,9 +46,9 @@ export const useAuthStore = create<AuthState>((set) => ({
       session: data.session,
       user: data.user,
       loading: false,
-      error: error?.message ?? null
+      error: error?.message ?? (data.session ? null : "Cadastro criado. Confirme o e-mail antes de entrar.")
     });
-    return !error;
+    return Boolean(!error && data.session);
   },
   signUp: async (name, email, password) => {
     if (!hasSupabaseConfig) {

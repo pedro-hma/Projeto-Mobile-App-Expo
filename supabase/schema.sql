@@ -26,7 +26,7 @@ alter table public.watch_items enable row level security;
 
 create policy "genres are visible for authenticated users"
 on public.genres for select
-to authenticated
+to anon, authenticated
 using (true);
 
 create policy "users can read own watch items"
