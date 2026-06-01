@@ -33,6 +33,42 @@ const emptyForm: WatchItemForm = {
   genre_id: ""
 };
 
+function getRatingMeta(rating: number | null) {
+  if (rating === null || Number.isNaN(rating)) {
+    return {
+      label: "Sem nota",
+      backgroundColor: "#ECE7DF",
+      textColor: "#52616F",
+      icon: "star-outline"
+    };
+  }
+
+  if (rating >= 8) {
+    return {
+      label: `${rating}/10 - Excelente`,
+      backgroundColor: "#DDF7EC",
+      textColor: "#067647",
+      icon: "star"
+    };
+  }
+
+  if (rating >= 5) {
+    return {
+      label: `${rating}/10 - Boa`,
+      backgroundColor: "#FFF4CC",
+      textColor: "#8A5A00",
+      icon: "star-half-full"
+    };
+  }
+
+  return {
+    label: `${rating}/10 - Baixa`,
+    backgroundColor: "#FDE2E1",
+    textColor: "#B42318",
+    icon: "star-outline"
+  };
+}
+
 export default function WatchListScreen() {
   const user = useAuthStore((state) => state.user);
   const {
@@ -62,7 +98,14 @@ export default function WatchListScreen() {
     }
   }, [form.genre_id, genres]);
 
-  const canSave = useMemo(() => Boolean(form.title.trim() && form.genre_id), [form]);
+  const parsedRating = form.rating ? Number(form.rating.replace(",", ".")) : null;
+  const ratingIsValid =
+    parsedRating === null || (!Number.isNaN(parsedRating) && parsedRating >= 0 && parsedRating <= 10);
+  const ratingMeta = getRatingMeta(parsedRating);
+  const canSave = useMemo(
+    () => Boolean(form.title.trim() && form.genre_id && ratingIsValid),
+    [form.genre_id, form.title, ratingIsValid]
+  );
 
   function resetForm() {
     setEditingId(null);
@@ -90,7 +133,7 @@ export default function WatchListScreen() {
       title: form.title.trim(),
       type: form.type,
       status: form.status,
-      rating: form.rating ? Number(form.rating) : null,
+      rating: parsedRating,
       notes: form.notes.trim() || null,
       genre_id: form.genre_id
     };
@@ -160,6 +203,18 @@ export default function WatchListScreen() {
             onChangeText={(rating) => setForm((current) => ({ ...current, rating }))}
             value={form.rating}
           />
+          <View style={styles.ratingPreview}>
+            <Chip
+              icon={ratingMeta.icon}
+              style={[styles.ratingChip, { backgroundColor: ratingMeta.backgroundColor }]}
+              textStyle={{ color: ratingMeta.textColor, fontWeight: "800" }}
+            >
+              {ratingMeta.label}
+            </Chip>
+          </View>
+          <HelperText type="error" visible={!ratingIsValid}>
+            Informe uma nota entre 0 e 10.
+          </HelperText>
           <TextInput
             label="Comentario pessoal"
             mode="outlined"
@@ -220,7 +275,13 @@ export default function WatchListScreen() {
             <View style={styles.chips}>
               <Chip icon="shape">{item.genres?.name ?? "Sem genero"}</Chip>
               <Chip icon="progress-check">{item.status}</Chip>
-              {item.rating ? <Chip icon="star">{item.rating}/10</Chip> : <Chip icon="star-outline">Sem nota</Chip>}
+              <Chip
+                icon={getRatingMeta(item.rating).icon}
+                style={[styles.ratingChip, { backgroundColor: getRatingMeta(item.rating).backgroundColor }]}
+                textStyle={{ color: getRatingMeta(item.rating).textColor, fontWeight: "800" }}
+              >
+                {getRatingMeta(item.rating).label}
+              </Chip>
             </View>
             <View style={styles.actions}>
               <Button icon="pencil" mode="outlined" onPress={() => startEdit(item)}>
@@ -264,6 +325,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     padding: 8
+  },
+  ratingPreview: {
+    alignItems: "flex-start"
+  },
+  ratingChip: {
+    borderRadius: 8
   },
   actions: {
     flexDirection: "row",
