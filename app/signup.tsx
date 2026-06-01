@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
-import { Button, HelperText, Text, TextInput } from "react-native-paper";
+import { Button, Card, HelperText, Text, TextInput } from "react-native-paper";
 
 import { useAuthStore } from "@/store/auth-store";
 
@@ -28,42 +28,44 @@ export default function SignupScreen() {
           Criar conta
         </Text>
         <Text variant="bodyMedium" style={styles.copy}>
-          Entre para salvar sua propria lista e demonstrar a autenticacao integrada ao back-end.
+          Use seu e-mail para criar uma lista privada integrada ao Supabase.
         </Text>
       </View>
 
-      <View style={styles.form}>
-        <TextInput label="Nome" mode="outlined" onChangeText={setName} value={name} />
-        <TextInput
-          autoCapitalize="none"
-          keyboardType="email-address"
-          label="E-mail"
-          mode="outlined"
-          onChangeText={setEmail}
-          value={email}
-        />
-        <TextInput
-          label="Senha"
-          mode="outlined"
-          onChangeText={setPassword}
-          secureTextEntry
-          value={password}
-        />
-        <HelperText type="error" visible={Boolean(error)}>
-          {error}
-        </HelperText>
-        <Button
-          disabled={!name || !email || password.length < 6 || loading}
-          loading={loading}
-          mode="contained"
-          onPress={handleSignup}
-        >
-          Cadastrar
-        </Button>
-        <Button mode="text" onPress={() => router.back()}>
-          Voltar ao login
-        </Button>
-      </View>
+      <Card style={styles.card}>
+        <Card.Content style={styles.form}>
+          <TextInput label="Nome completo" mode="outlined" onChangeText={setName} value={name} />
+          <TextInput
+            autoCapitalize="none"
+            keyboardType="email-address"
+            label="E-mail"
+            mode="outlined"
+            onChangeText={setEmail}
+            value={email}
+          />
+          <TextInput
+            label="Senha"
+            mode="outlined"
+            onChangeText={setPassword}
+            secureTextEntry
+            value={password}
+          />
+          <HelperText type="error" visible={Boolean(error)}>
+            {error}
+          </HelperText>
+          <Button
+            disabled={!name || !email || password.length < 6 || loading}
+            loading={loading}
+            mode="contained"
+            onPress={handleSignup}
+          >
+            Cadastrar
+          </Button>
+          <Button mode="text" onPress={() => router.back()}>
+            Voltar ao login
+          </Button>
+        </Card.Content>
+      </Card>
     </KeyboardAvoidingView>
   );
 }
@@ -74,18 +76,22 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 28,
     padding: 24,
-    backgroundColor: "#F7F4EF"
+    backgroundColor: "#F8F6F2"
   },
   header: {
     gap: 8
   },
   title: {
-    color: "#D94141",
+    color: "#C83349",
     fontWeight: "800"
   },
   copy: {
-    color: "#4B5563",
+    color: "#52616F",
     lineHeight: 22
+  },
+  card: {
+    borderRadius: 8,
+    elevation: 1
   },
   form: {
     gap: 14

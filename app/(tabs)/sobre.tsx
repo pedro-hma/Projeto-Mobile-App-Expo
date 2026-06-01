@@ -9,26 +9,25 @@ export default function AboutScreen() {
         Sobre o CineBox
       </Text>
       <Text style={styles.copy}>
-        CineBox e um app mobile feito em React Native com Expo para organizar uma
-        watchlist pessoal de filmes e series.
+        CineBox e um app mobile para organizar uma watchlist pessoal com login, dados no Supabase e navegacao por abas.
       </Text>
 
-      <Card>
+      <Card style={styles.panel}>
         <Card.Content>
-          <Text variant="titleLarge">Requisitos atendidos</Text>
-          <List.Item title="Expo Router" description="Navegacao por arquivos em app/." />
-          <List.Item title="Zustand" description="Estado global de autenticacao e catalogo." />
+          <Text variant="titleLarge" style={styles.cardTitle}>Requisitos atendidos</Text>
+          <List.Item title="Expo Router" description="Rotas organizadas na pasta app/." />
+          <List.Item title="Zustand" description="Estado global para autenticacao e catalogo." />
           <List.Item title="Back-end" description="Supabase Auth e tabelas relacionais." />
-          <List.Item title="CRUD" description="Criar, listar, editar e excluir itens." />
-          <List.Item title="Relacionamento" description="Item da lista vinculado a um genero." />
+          <List.Item title="CRUD" description="Criar, listar, editar e excluir itens da lista." />
+          <List.Item title="Relacionamento" description="Cada item pertence a um genero." />
         </Card.Content>
       </Card>
 
-      <Card>
+      <Card style={styles.panel}>
         <Card.Content style={styles.card}>
-          <Text variant="titleLarge">Equipe</Text>
+          <Text variant="titleLarge" style={styles.cardTitle}>Equipe</Text>
           <Text style={styles.copy}>
-            A tela individual da equipe tambem faz parte dos requisitos de navegacao.
+            Projeto individual desenvolvido por Pedro HMA.
           </Text>
           <View>
             <Button icon="account" mode="contained-tonal" onPress={() => router.push("/equipe/pedro")}>
@@ -45,18 +44,25 @@ const styles = StyleSheet.create({
   container: {
     gap: 16,
     padding: 20,
-    backgroundColor: "#F7F4EF"
+    backgroundColor: "#F8F6F2"
   },
   title: {
-    color: "#D94141",
+    color: "#C83349",
     fontWeight: "800",
     paddingTop: 18
   },
   copy: {
-    color: "#4B5563",
+    color: "#52616F",
     lineHeight: 22
   },
   card: {
     gap: 12
+  },
+  panel: {
+    borderRadius: 8
+  },
+  cardTitle: {
+    color: "#17202A",
+    fontWeight: "800"
   }
 });

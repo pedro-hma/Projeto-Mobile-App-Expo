@@ -118,14 +118,16 @@ export default function WatchListScreen() {
         Minha Lista
       </Text>
       <Text style={styles.copy}>
-        CRUD completo de filmes e series com relacionamento por genero.
+        Cadastre, edite e remova filmes ou series. Cada registro fica salvo no Supabase e ligado a um genero.
       </Text>
 
       <Card>
         <Card.Content style={styles.form}>
-          <Text variant="titleLarge">{editingId ? "Editar item" : "Novo item"}</Text>
+          <Text variant="titleLarge" style={styles.cardTitle}>
+            {editingId ? "Editar item" : "Novo item"}
+          </Text>
           <TextInput
-            label="Titulo"
+            label="Titulo do filme ou serie"
             mode="outlined"
             onChangeText={(title) => setForm((current) => ({ ...current, title }))}
             value={form.title}
@@ -159,7 +161,7 @@ export default function WatchListScreen() {
             value={form.rating}
           />
           <TextInput
-            label="Comentario"
+            label="Comentario pessoal"
             mode="outlined"
             multiline
             onChangeText={(notes) => setForm((current) => ({ ...current, notes }))}
@@ -194,13 +196,23 @@ export default function WatchListScreen() {
         </Card.Content>
       </Card>
 
-      <Text variant="titleLarge">Itens cadastrados</Text>
+      <Text variant="titleLarge" style={styles.cardTitle}>Itens cadastrados</Text>
+      {!loading && items.length === 0 ? (
+        <Card style={styles.emptyCard}>
+          <Card.Content style={styles.emptyContent}>
+            <Text variant="titleMedium" style={styles.emptyTitle}>Sua lista ainda esta vazia</Text>
+            <Text style={styles.copy}>
+              Crie o primeiro item acima para demonstrar o cadastro no back-end. Depois use editar e excluir no video.
+            </Text>
+          </Card.Content>
+        </Card>
+      ) : null}
       {items.map((item) => (
         <Card key={item.id}>
           <Card.Content style={styles.item}>
             <View style={styles.itemHeader}>
               <View style={styles.itemTitle}>
-                <Text variant="titleMedium">{item.title}</Text>
+                <Text variant="titleMedium" style={styles.itemName}>{item.title}</Text>
                 <Text style={styles.copy}>{item.notes || "Sem comentario"}</Text>
               </View>
               <Chip>{item.type}</Chip>
@@ -208,7 +220,7 @@ export default function WatchListScreen() {
             <View style={styles.chips}>
               <Chip icon="shape">{item.genres?.name ?? "Sem genero"}</Chip>
               <Chip icon="progress-check">{item.status}</Chip>
-              {item.rating ? <Chip icon="star">{item.rating}/10</Chip> : null}
+              {item.rating ? <Chip icon="star">{item.rating}/10</Chip> : <Chip icon="star-outline">Sem nota</Chip>}
             </View>
             <View style={styles.actions}>
               <Button icon="pencil" mode="outlined" onPress={() => startEdit(item)}>
@@ -229,22 +241,26 @@ const styles = StyleSheet.create({
   container: {
     gap: 16,
     padding: 20,
-    backgroundColor: "#F7F4EF"
+    backgroundColor: "#F8F6F2"
   },
   title: {
-    color: "#D94141",
+    color: "#C83349",
     fontWeight: "800",
     paddingTop: 18
   },
   copy: {
-    color: "#4B5563",
+    color: "#52616F",
     lineHeight: 22
   },
   form: {
     gap: 14
   },
+  cardTitle: {
+    color: "#17202A",
+    fontWeight: "800"
+  },
   genreBox: {
-    borderColor: "#D6CEC2",
+    borderColor: "#D5CDC2",
     borderRadius: 8,
     borderWidth: 1,
     padding: 8
@@ -256,6 +272,20 @@ const styles = StyleSheet.create({
   },
   item: {
     gap: 12
+  },
+  itemName: {
+    color: "#17202A",
+    fontWeight: "800"
+  },
+  emptyCard: {
+    borderRadius: 8
+  },
+  emptyContent: {
+    gap: 6
+  },
+  emptyTitle: {
+    color: "#17202A",
+    fontWeight: "800"
   },
   itemHeader: {
     flexDirection: "row",

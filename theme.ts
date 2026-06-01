@@ -4,13 +4,13 @@ export const theme = {
   ...MD3LightTheme,
   colors: {
     ...MD3LightTheme.colors,
-    primary: "#D94141",
-    secondary: "#1E88E5",
-    tertiary: "#16A085",
-    background: "#F7F4EF",
+    primary: "#C83349",
+    secondary: "#246BFE",
+    tertiary: "#008F7A",
+    background: "#F8F6F2",
     surface: "#FFFFFF",
-    surfaceVariant: "#F0ECE6",
-    outline: "#C9C1B6",
-    onSurface: "#1F2933"
+    surfaceVariant: "#EFEAE2",
+    outline: "#D5CDC2",
+    onSurface: "#17202A"
   }
 };

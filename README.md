@@ -6,8 +6,6 @@ CineBox e um app mobile para organizar uma lista pessoal de filmes e series. O u
 
 - Pedro HMA
 
-> Se houver mais integrantes, adicione os nomes nesta secao antes da entrega final.
-
 ## Tema
 
 Organizador de filmes e series assistidos, em andamento ou desejados.
