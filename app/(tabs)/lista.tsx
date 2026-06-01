@@ -5,7 +5,6 @@ import {
   Card,
   Chip,
   HelperText,
-  RadioButton,
   SegmentedButtons,
   Text,
   TextInput
@@ -340,14 +339,28 @@ export default function WatchListScreen() {
 
           <View style={styles.genreBox}>
             <Text variant="titleMedium">Genero</Text>
-            <RadioButton.Group
-              onValueChange={(genre_id) => setForm((current) => ({ ...current, genre_id }))}
-              value={form.genre_id}
-            >
-              {genres.map((genre) => (
-                <RadioButton.Item key={genre.id} label={genre.name} value={genre.id} />
-              ))}
-            </RadioButton.Group>
+            <View style={styles.genreChips}>
+              {genres.map((genre) => {
+                const selected = form.genre_id === genre.id;
+
+                return (
+                  <Chip
+                    key={genre.id}
+                    icon={selected ? "check" : "shape-outline"}
+                    mode={selected ? "flat" : "outlined"}
+                    onPress={() => setForm((current) => ({ ...current, genre_id: genre.id }))}
+                    selected={selected}
+                    style={selected ? styles.genreChipSelected : styles.genreChip}
+                    textStyle={selected ? styles.genreChipSelectedText : styles.genreChipText}
+                  >
+                    {genre.name}
+                  </Chip>
+                );
+              })}
+            </View>
+            {genres.length === 0 ? (
+              <Text style={styles.copy}>Nenhum genero carregado. Confira a tabela genres no Supabase.</Text>
+            ) : null}
           </View>
 
           <HelperText type="error" visible={Boolean(error)}>
@@ -452,7 +465,27 @@ const styles = StyleSheet.create({
     borderColor: "#D5CDC2",
     borderRadius: 8,
     borderWidth: 1,
+    gap: 10,
     padding: 8
+  },
+  genreChips: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8
+  },
+  genreChip: {
+    borderRadius: 8
+  },
+  genreChipSelected: {
+    borderRadius: 8,
+    backgroundColor: "#C83349"
+  },
+  genreChipText: {
+    color: "#52616F"
+  },
+  genreChipSelectedText: {
+    color: "#FFFFFF",
+    fontWeight: "800"
   },
   ratingPreview: {
     alignItems: "flex-start"
