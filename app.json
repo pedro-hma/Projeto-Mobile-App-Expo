@@ -2,6 +2,7 @@
   "expo": {
     "name": "CineBox",
     "slug": "cinebox-mobile",
+    "owner": "pwmb-20261-atividade-portifolio-pedro-ayres",
     "version": "1.0.0",
     "orientation": "portrait",
     "scheme": "cinebox",
