@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Alert, ScrollView, StyleSheet, View } from "react-native";
+import { Alert, Image, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import {
   Button,
   Card,
@@ -12,6 +12,7 @@ import {
 } from "react-native-paper";
 
 import { WatchItem } from "@/lib/types";
+import { hasTmdbConfig, MediaSearchResult, searchMedia } from "@/lib/tmdb";
 import { useAuthStore } from "@/store/auth-store";
 import { useCineboxStore } from "@/store/cinebox-store";
 
@@ -21,6 +22,9 @@ type WatchItemForm = {
   status: WatchItem["status"];
   rating: string;
   notes: string;
+  synopsis: string;
+  poster_url: string;
+  external_id: string;
   genre_id: string;
 };
 
@@ -30,6 +34,9 @@ const emptyForm: WatchItemForm = {
   status: "Quero assistir" as WatchItem["status"],
   rating: "",
   notes: "",
+  synopsis: "",
+  poster_url: "",
+  external_id: "",
   genre_id: ""
 };
 
@@ -84,6 +91,9 @@ export default function WatchListScreen() {
   } = useCineboxStore();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [mediaResults, setMediaResults] = useState<MediaSearchResult[]>([]);
 
   useEffect(() => {
     fetchGenres();
@@ -120,8 +130,57 @@ export default function WatchListScreen() {
       status: item.status,
       rating: item.rating ? String(item.rating) : "",
       notes: item.notes ?? "",
+      synopsis: item.synopsis ?? "",
+      poster_url: item.poster_url ?? "",
+      external_id: item.external_id ?? "",
       genre_id: item.genre_id
     });
+  }
+
+  async function handleMediaSearch() {
+    setSearchError(null);
+    setMediaResults([]);
+
+    if (!hasTmdbConfig) {
+      setSearchError("Configure EXPO_PUBLIC_TMDB_TOKEN no arquivo .env para usar a busca automatica.");
+      return;
+    }
+
+    if (!form.title.trim()) {
+      setSearchError("Digite um titulo antes de buscar.");
+      return;
+    }
+
+    setSearching(true);
+    try {
+      const results = await searchMedia(form.title);
+      setMediaResults(results);
+      if (results.length === 0) {
+        setSearchError("Nenhum filme ou serie encontrado.");
+      }
+    } catch (searchException) {
+      setSearchError(
+        searchException instanceof Error
+          ? searchException.message
+          : "Nao foi possivel buscar filmes e series agora."
+      );
+    } finally {
+      setSearching(false);
+    }
+  }
+
+  function applyMediaResult(result: MediaSearchResult) {
+    setForm((current) => ({
+      ...current,
+      title: result.title,
+      type: result.type,
+      synopsis: result.synopsis ?? "",
+      notes: result.synopsis ?? current.notes,
+      poster_url: result.posterUrl ?? "",
+      external_id: result.externalId
+    }));
+    setMediaResults([]);
+    setSearchError(null);
   }
 
   async function handleSave() {
@@ -135,6 +194,9 @@ export default function WatchListScreen() {
       status: form.status,
       rating: parsedRating,
       notes: form.notes.trim() || null,
+      synopsis: form.synopsis.trim() || null,
+      poster_url: form.poster_url.trim() || null,
+      external_id: form.external_id.trim() || null,
       genre_id: form.genre_id
     };
 
@@ -175,6 +237,48 @@ export default function WatchListScreen() {
             onChangeText={(title) => setForm((current) => ({ ...current, title }))}
             value={form.title}
           />
+          <View style={styles.actions}>
+            <Button
+              disabled={searching || !form.title.trim()}
+              icon="movie-search"
+              loading={searching}
+              mode="contained-tonal"
+              onPress={handleMediaSearch}
+            >
+              Buscar dados
+            </Button>
+          </View>
+          <HelperText type="error" visible={Boolean(searchError)}>
+            {searchError}
+          </HelperText>
+          {mediaResults.length > 0 ? (
+            <View style={styles.resultsBox}>
+              <Text variant="titleMedium" style={styles.cardTitle}>Resultados encontrados</Text>
+              {mediaResults.map((result) => (
+                <Pressable
+                  key={result.externalId}
+                  onPress={() => applyMediaResult(result)}
+                  style={styles.resultItem}
+                >
+                  {result.posterUrl ? (
+                    <Image source={{ uri: result.posterUrl }} style={styles.resultPoster} />
+                  ) : (
+                    <View style={styles.resultPosterFallback}>
+                      <Text style={styles.posterFallbackText}>Sem cartaz</Text>
+                    </View>
+                  )}
+                  <View style={styles.resultText}>
+                    <Text variant="titleSmall" style={styles.itemName}>
+                      {result.title} {result.year ? `(${result.year})` : ""}
+                    </Text>
+                    <Text style={styles.copy} numberOfLines={3}>
+                      {result.synopsis ?? "Sem sinopse disponivel."}
+                    </Text>
+                  </View>
+                </Pressable>
+              ))}
+            </View>
+          ) : null}
           <SegmentedButtons
             onValueChange={(type) =>
               setForm((current) => ({ ...current, type: type as "Filme" | "Serie" }))
@@ -222,6 +326,17 @@ export default function WatchListScreen() {
             onChangeText={(notes) => setForm((current) => ({ ...current, notes }))}
             value={form.notes}
           />
+          {form.poster_url ? (
+            <View style={styles.selectedMedia}>
+              <Image source={{ uri: form.poster_url }} style={styles.selectedPoster} />
+              <View style={styles.selectedText}>
+                <Text variant="titleMedium" style={styles.itemName}>Dados importados</Text>
+                <Text style={styles.copy} numberOfLines={4}>
+                  {form.synopsis || "Sinopse importada da busca externa."}
+                </Text>
+              </View>
+            </View>
+          ) : null}
 
           <View style={styles.genreBox}>
             <Text variant="titleMedium">Genero</Text>
@@ -265,12 +380,25 @@ export default function WatchListScreen() {
       {items.map((item) => (
         <Card key={item.id}>
           <Card.Content style={styles.item}>
-            <View style={styles.itemHeader}>
-              <View style={styles.itemTitle}>
-                <Text variant="titleMedium" style={styles.itemName}>{item.title}</Text>
-                <Text style={styles.copy}>{item.notes || "Sem comentario"}</Text>
+            <View style={styles.mediaCardHeader}>
+              {item.poster_url ? (
+                <Image source={{ uri: item.poster_url }} style={styles.cardPoster} />
+              ) : (
+                <View style={styles.cardPosterFallback}>
+                  <Text style={styles.posterFallbackText}>Sem cartaz</Text>
+                </View>
+              )}
+              <View style={styles.mediaInfo}>
+                <View style={styles.itemHeader}>
+                  <View style={styles.itemTitle}>
+                    <Text variant="titleMedium" style={styles.itemName}>{item.title}</Text>
+                    <Text style={styles.copy} numberOfLines={3}>
+                      {item.synopsis || item.notes || "Sem sinopse ou comentario."}
+                    </Text>
+                  </View>
+                  <Chip>{item.type}</Chip>
+                </View>
               </View>
-              <Chip>{item.type}</Chip>
             </View>
             <View style={styles.chips}>
               <Chip icon="shape">{item.genres?.name ?? "Sem genero"}</Chip>
@@ -367,5 +495,81 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8
+  },
+  resultsBox: {
+    gap: 10,
+    borderColor: "#D5CDC2",
+    borderRadius: 8,
+    borderWidth: 1,
+    padding: 10
+  },
+  resultItem: {
+    flexDirection: "row",
+    gap: 12,
+    paddingVertical: 8
+  },
+  resultPoster: {
+    width: 54,
+    height: 80,
+    borderRadius: 6,
+    backgroundColor: "#ECE7DF"
+  },
+  resultPosterFallback: {
+    width: 54,
+    height: 80,
+    borderRadius: 6,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#ECE7DF",
+    padding: 6
+  },
+  posterFallbackText: {
+    color: "#52616F",
+    fontSize: 10,
+    textAlign: "center"
+  },
+  resultText: {
+    flex: 1,
+    gap: 4
+  },
+  selectedMedia: {
+    flexDirection: "row",
+    gap: 12,
+    borderColor: "#D5CDC2",
+    borderRadius: 8,
+    borderWidth: 1,
+    padding: 10
+  },
+  selectedPoster: {
+    width: 72,
+    height: 106,
+    borderRadius: 6,
+    backgroundColor: "#ECE7DF"
+  },
+  selectedText: {
+    flex: 1,
+    gap: 4
+  },
+  mediaCardHeader: {
+    flexDirection: "row",
+    gap: 12
+  },
+  cardPoster: {
+    width: 76,
+    height: 112,
+    borderRadius: 7,
+    backgroundColor: "#ECE7DF"
+  },
+  cardPosterFallback: {
+    width: 76,
+    height: 112,
+    borderRadius: 7,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#ECE7DF",
+    padding: 8
+  },
+  mediaInfo: {
+    flex: 1
   }
 });

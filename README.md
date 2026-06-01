@@ -1,6 +1,7 @@
 # CineBox - App Mobile com Expo
 
 CineBox e um app mobile para organizar uma lista pessoal de filmes e series. O usuario pode criar conta, fazer login, cadastrar itens na lista, editar, excluir, escolher genero, registrar status e nota.
+Tambem possui busca externa na TMDb para preencher cartaz e sinopse automaticamente.
 
 ## Integrantes
 
@@ -26,6 +27,7 @@ Organizador de filmes e series assistidos, em andamento ou desejados.
 | Relacionamento | `watch_items.genre_id` referencia `genres.id` |
 | Autenticacao | Supabase Auth com login, logout e sign up |
 | Estilizacao | React Native Paper + estilos manuais |
+| API externa | Busca de filmes/series na TMDb |
 
 ## Tecnologias
 
@@ -48,6 +50,7 @@ Organizador de filmes e series assistidos, em andamento ou desejados.
 ```env
 EXPO_PUBLIC_SUPABASE_URL=https://seu-projeto.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=sua-chave-anon-publica
+EXPO_PUBLIC_TMDB_TOKEN=seu-token-read-access-tmdb
 ```
 
 ## Como rodar
@@ -76,6 +79,8 @@ Campos principais:
 - status: Quero assistir, Assistindo ou Concluido
 - nota
 - comentario
+- sinopse
+- cartaz
 - genero relacionado
 - usuario dono do registro
 
