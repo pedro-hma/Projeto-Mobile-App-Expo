@@ -39,6 +39,61 @@ const emptyForm: WatchItemForm = {
   genre_id: ""
 };
 
+const videoSeedEmail = "video@cinebox.com";
+
+const videoSeedItems = [
+  {
+    title: "Interestelar",
+    type: "Filme" as const,
+    status: "Concluido" as WatchItem["status"],
+    rating: 9,
+    genreName: "Ficcao cientifica",
+    notes: "Visual marcante e historia envolvente sobre tempo, familia e exploracao espacial.",
+    synopsis:
+      "Um grupo de exploradores viaja por um buraco de minhoca em busca de um novo lar para a humanidade."
+  },
+  {
+    title: "Breaking Bad",
+    type: "Serie" as const,
+    status: "Assistindo" as WatchItem["status"],
+    rating: 8,
+    genreName: "Drama",
+    notes: "Serie intensa, com evolucao forte dos personagens.",
+    synopsis:
+      "Um professor de quimica passa a produzir metanfetamina enquanto enfrenta uma doenca grave e conflitos morais."
+  },
+  {
+    title: "Invocacao do Mal",
+    type: "Filme" as const,
+    status: "Quero assistir" as WatchItem["status"],
+    rating: null,
+    genreName: "Terror",
+    notes: "Adicionar a lista para assistir depois.",
+    synopsis:
+      "Investigadores paranormais ajudam uma familia aterrorizada por uma presenca sombria em uma casa isolada."
+  },
+  {
+    title: "Divertida Mente",
+    type: "Filme" as const,
+    status: "Concluido" as WatchItem["status"],
+    rating: 7,
+    genreName: "Comedia",
+    notes: "Filme criativo e leve, com boa mensagem emocional.",
+    synopsis:
+      "As emocoes de uma garota tentam guia-la durante uma fase de mudancas importantes em sua vida."
+  },
+  {
+    title: "O Poco",
+    type: "Filme" as const,
+    status: "Concluido" as WatchItem["status"],
+    rating: 4,
+    genreName: "Drama",
+    notes: "Ideia interessante, mas experiencia pesada.",
+    synopsis:
+      "Presos em uma estrutura vertical precisam lidar com escassez, egoismo e sobrevivencia."
+  }
+];
+
 function getRatingMeta(rating: number | null) {
   if (rating === null || Number.isNaN(rating)) {
     return {
@@ -91,6 +146,7 @@ export default function WatchListScreen() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [searching, setSearching] = useState(false);
+  const [seededVideoList, setSeededVideoList] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [mediaResults, setMediaResults] = useState<MediaSearchResult[]>([]);
 
@@ -106,6 +162,42 @@ export default function WatchListScreen() {
       setForm((current) => ({ ...current, genre_id: genres[0].id }));
     }
   }, [form.genre_id, genres]);
+
+  useEffect(() => {
+    async function seedVideoList() {
+      if (
+        seededVideoList ||
+        !user?.id ||
+        user.email?.toLowerCase() !== videoSeedEmail ||
+        genres.length === 0 ||
+        items.length > 0
+      ) {
+        return;
+      }
+
+      setSeededVideoList(true);
+      const genresByName = new Map(genres.map((genre) => [genre.name.toLowerCase(), genre.id]));
+      const fallbackGenreId = genres[0].id;
+
+      for (const item of videoSeedItems) {
+        await createItem(user.id, {
+          title: item.title,
+          type: item.type,
+          status: item.status,
+          rating: item.rating,
+          notes: item.notes,
+          synopsis: item.synopsis,
+          poster_url: null,
+          external_id: null,
+          genre_id: genresByName.get(item.genreName.toLowerCase()) ?? fallbackGenreId
+        });
+      }
+
+      await fetchItems(user.id);
+    }
+
+    seedVideoList();
+  }, [createItem, fetchItems, genres, items.length, seededVideoList, user?.email, user?.id]);
 
   const parsedRating = form.rating ? Number(form.rating.replace(",", ".")) : null;
   const ratingIsValid =
