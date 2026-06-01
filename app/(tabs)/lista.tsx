@@ -39,6 +39,59 @@ const emptyForm: WatchItemForm = {
   genre_id: ""
 };
 
+const demoItems = [
+  {
+    title: "Interestelar",
+    type: "Filme" as const,
+    status: "Concluido" as WatchItem["status"],
+    rating: 9,
+    genreName: "Ficcao cientifica",
+    notes: "Visual marcante e historia envolvente sobre tempo, familia e exploracao espacial.",
+    synopsis:
+      "Um grupo de exploradores viaja por um buraco de minhoca em busca de um novo lar para a humanidade."
+  },
+  {
+    title: "Breaking Bad",
+    type: "Serie" as const,
+    status: "Assistindo" as WatchItem["status"],
+    rating: 8,
+    genreName: "Drama",
+    notes: "Serie intensa, com evolucao forte dos personagens.",
+    synopsis:
+      "Um professor de quimica passa a produzir metanfetamina enquanto enfrenta uma doenca grave e conflitos morais."
+  },
+  {
+    title: "Invocacao do Mal",
+    type: "Filme" as const,
+    status: "Quero assistir" as WatchItem["status"],
+    rating: null,
+    genreName: "Terror",
+    notes: "Adicionar a lista para assistir depois.",
+    synopsis:
+      "Investigadores paranormais ajudam uma familia aterrorizada por uma presenca sombria em uma casa isolada."
+  },
+  {
+    title: "Divertida Mente",
+    type: "Filme" as const,
+    status: "Concluido" as WatchItem["status"],
+    rating: 7,
+    genreName: "Comedia",
+    notes: "Filme criativo e leve, com boa mensagem emocional.",
+    synopsis:
+      "As emocoes de uma garota tentam guia-la durante uma fase de mudancas importantes em sua vida."
+  },
+  {
+    title: "O Poco",
+    type: "Filme" as const,
+    status: "Concluido" as WatchItem["status"],
+    rating: 4,
+    genreName: "Drama",
+    notes: "Ideia interessante, mas experiencia pesada.",
+    synopsis:
+      "Presos em uma estrutura vertical precisam lidar com escassez, egoismo e sobrevivencia."
+  }
+];
+
 function getRatingMeta(rating: number | null) {
   if (rating === null || Number.isNaN(rating)) {
     return {
@@ -91,6 +144,7 @@ export default function WatchListScreen() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [searching, setSearching] = useState(false);
+  const [seedingDemo, setSeedingDemo] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [mediaResults, setMediaResults] = useState<MediaSearchResult[]>([]);
 
@@ -180,6 +234,43 @@ export default function WatchListScreen() {
     }));
     setMediaResults([]);
     setSearchError(null);
+  }
+
+  async function handleSeedDemoList() {
+    if (!user?.id || genres.length === 0) {
+      setSearchError("Entre no app e carregue os generos antes de montar a lista demo.");
+      return;
+    }
+
+    setSeedingDemo(true);
+    setSearchError(null);
+
+    const existingTitles = new Set(items.map((item) => item.title.toLowerCase()));
+    const genresByName = new Map(genres.map((genre) => [genre.name.toLowerCase(), genre.id]));
+    const fallbackGenreId = genres[0]?.id;
+
+    for (const demoItem of demoItems) {
+      if (existingTitles.has(demoItem.title.toLowerCase())) {
+        continue;
+      }
+
+      const genreId = genresByName.get(demoItem.genreName.toLowerCase()) ?? fallbackGenreId;
+
+      await createItem(user.id, {
+        title: demoItem.title,
+        type: demoItem.type,
+        status: demoItem.status,
+        rating: demoItem.rating,
+        notes: demoItem.notes,
+        synopsis: demoItem.synopsis,
+        poster_url: null,
+        external_id: null,
+        genre_id: genreId
+      });
+    }
+
+    await fetchItems(user.id);
+    setSeedingDemo(false);
   }
 
   async function handleSave() {
@@ -380,6 +471,17 @@ export default function WatchListScreen() {
       </Card>
 
       <Text variant="titleLarge" style={styles.cardTitle}>Itens cadastrados</Text>
+      <View style={styles.actions}>
+        <Button
+          disabled={seedingDemo || genres.length === 0}
+          icon="playlist-plus"
+          loading={seedingDemo}
+          mode="contained-tonal"
+          onPress={handleSeedDemoList}
+        >
+          Carregar lista demo
+        </Button>
+      </View>
       {!loading && items.length === 0 ? (
         <Card style={styles.emptyCard}>
           <Card.Content style={styles.emptyContent}>
